@@ -17,4 +17,4 @@ $(OBJECTS): %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm *.o $(BIN)
+	rm *.o $(BIN) gmon.out
