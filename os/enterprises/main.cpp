@@ -2,7 +2,8 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-#include "main.h"
+#include "types.h"
+#include "consts.h"
 
 using std::cout;
 using std::cin;
@@ -68,17 +69,8 @@ void cb_help( state_t &state, const vector<string> args )
 		<< "	quit	quit from program"           << endl
 		<<                                              endl
 		<< "	chuser	change current user on next" << endl
+		<< "	lock    try to lock a balance"       << endl
 		<< endl;
-}
-
-void cb_quit( state_t &state, const vector<string> args )
-{
-	state.halted = true;
-}
-
-void cb_chuser( state_t &state, const vector<string> args )
-{
-	state.current_user = (user_t)( (state.current_user + 1) % USERS_COUNT );
 }
 
 /**

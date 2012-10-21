@@ -1,10 +1,10 @@
 #CC=g++
 CC=clang
 #CFLAGS=-I./inc -O3 -pthread
-CFLAGS=-I./inc -ggdb -g3 -O0 -DDEBUG -pg -pthread
+CFLAGS=-I./inc -ggdb -g3 -O0 -DDEBUG -pthread
 LDFLAGS=-pg -pthread
 LD=g++
-SOURCES=main.cpp
+SOURCES=main.cpp callbacks.cpp consts.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 BIN=enterprises
 
@@ -17,4 +17,4 @@ $(OBJECTS): %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm *.o $(BIN) gmon.out
+	rm -f -- *.o $(BIN) gmon.out > /dev/null

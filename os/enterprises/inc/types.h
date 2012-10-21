@@ -8,10 +8,6 @@
 using std::string;
 using std::vector;
 
-#define WHITESPACES " \t"
-#define USERS_COUNT 2
-#define LEGAL_COMMANDS_COUNT 3
-
 
 /**
  * User types enumeration type.
@@ -41,7 +37,8 @@ typedef void (*callback_t)( state_t &state, const vector<string> args );
 typedef enum COMMAND_TYPE {
 	cmd_help = 0,
 	cmd_quit,
-	cmd_chuser
+	cmd_chuser,
+	cmd_lock
 } cmd_t, *pcmd_t;
 
 /**
@@ -61,37 +58,5 @@ typedef struct LEGAL_COMMAND_INFO {
 	cmd_t type;
 	callback_t callback;
 } legal_cmd_info_t, *plegal_cmd_info_t;
-
-/**
- * Callback on help command.
- */
-void cb_help( state_t &state, const vector<string> args );
-
-/**
- * Callback on quit command.
- */
-void cb_quit( state_t &state, const vector<string> args );
-
-/**
- * Change current user on next.
- */
-void cb_chuser( state_t &state, const vector<string> args );
-
-/**
- * Users user-friendly names.
- */
-const char *USER_NAMES[ USERS_COUNT ] = {
-	"user 1",
-	"user 2"
-};
-
-/**
- * Array of legal commands definitions.
- */
-const legal_cmd_info_t LEGAL_COMMANDS[ LEGAL_COMMANDS_COUNT ] = {
-	{ .str = "help",   .type = cmd_help,   .callback = cb_help   },
-	{ .str = "quit",   .type = cmd_quit,   .callback = cb_quit   },
-	{ .str = "chuser", .type = cmd_chuser, .callback = cb_chuser }
-};
 
 #endif // !__INCLUDE_MAIN_H
