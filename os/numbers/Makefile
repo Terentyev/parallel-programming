@@ -1,7 +1,7 @@
 #CC=g++
 CC=clang
 CFLAGS=-I./inc -O3
-CFLAGS=-I./inc -ggdb -g3 -O0 -DDEBUG -pg -pthread
+CFLAGS=-I./inc -ggdb -g3 -O0 -DDEBUG -pthread
 #LDFLAGS=-pg
 LDFLAGS=-pthread
 LD=g++
