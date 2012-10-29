@@ -5,18 +5,18 @@
 
 #include "main.h"
 
+pthread_mutex_t third_mutex;
+int third_number = 0;
+
 /**
  * Print numbers.
  */
-void *print_numbers( void *arg )
+void *print_number( void *arg )
 {
-	int first = (int)(long int)arg;
+	int first = (int)(long int) arg;
 
-	for ( ; first < MAX_NUMBER; first += 2 )
-	{
-		printf( "%d ", first );
-		fflush( stdout );
-	}
+	printf( "%d ", first + 1 );
+	fflush( stdout );
 
 	return NULL;
 }
@@ -40,17 +40,51 @@ inline void safe_fork_impl(
 }
 
 /**
+ * Lock mutex and check returned value.
+ */
+inline void safe_mutex_lock_impl(
+	pthread_mutex_t *mutex,
+	const char *filename,
+	int lineno
+)
+{
+	if ( 0 != pthread_mutex_lock( mutex ) )
+	{
+		fprintf( stderr, "Error while mutex lock: [%d] %s", lineno, filename );
+		exit( 1 );
+	}
+}
+
+/**
+ * Unlock mutex and check returned value.
+ */
+inline void safe_mutex_unlock_impl(
+	pthread_mutex_t *mutex,
+	const char *filename,
+	int lineno
+)
+{
+	if ( 0 != pthread_mutex_unlock( mutex ) )
+	{
+		fprintf( stderr, "Error while mutex unlock: [%d] %s", lineno, filename );
+		exit( 1 );
+	}
+}
+
+/**
  * In first thread.
- * Should create second thread and launch print_numbers.
+ * Should create second thread and launch print_number.
  */
 void *_linear_first_child( void *arg )
 {
+	int i = (int)(long int) arg;
 	pthread_t child;
 
-	/* Create first thread */
-	safe_fork( &child, &print_numbers, (void *)1 );
+	print_number( arg );
 
-	print_numbers( 0 );
+	++i;
+	/* Create second thread */
+	safe_fork( &child, &print_number, (void*) i );
 
 	pthread_join( child, NULL );
 
@@ -62,12 +96,15 @@ void *_linear_first_child( void *arg )
  */
 void split_linear()
 {
-	pthread_t child;
+	for ( int i = 0; i < MAX_NUMBER / 2; ++i )
+	{
+		pthread_t child;
 
-	/* Create first thread */
-	safe_fork( &child, &_linear_first_child, NULL );
+		/* Create first thread */
+		safe_fork( &child, &_linear_first_child, (void*) (2 * i) );
 
-	pthread_join( child, NULL );
+		pthread_join( child, NULL );
+	}
 }
 
 /**
@@ -75,47 +112,58 @@ void split_linear()
  */
 void split_parallel()
 {
-	pthread_t child1, child2;
+	for ( int i = 0; i < MAX_NUMBER / 2; ++i )
+	{
+		pthread_t child1, child2;
 
-	/* Create first thread */
-	safe_fork( &child1, &print_numbers, (void *)0 );
+		/* Create first thread */
+		safe_fork( &child1, &print_number, (void *) (2 * i) );
+		pthread_join( child1, NULL );
 
-	/* Create second thread */
-	safe_fork( &child2, &print_numbers, (void *)1 );
-
-	pthread_join( child1, NULL );
-	pthread_join( child2, NULL );
+		/* Create second thread */
+		safe_fork( &child2, &print_number, (void *) (2 * i + 1) );
+		pthread_join( child2, NULL );
+	}
 }
 
 /**
  * In parent thread.
- * Should wait first thread and launch print_numbers.
+ * Should wait other thread and launch print_number.
  */
-void *_parallel_with_waiting_second_child( void *arg )
+void *_parallel_with_waiting_child( void *arg )
 {
-	pthread_t *child1 = (pthread_t*)arg;
+	int number = (int)(long int) arg;
 
-	/* Wait first thread */
-	pthread_join( *child1, NULL );
-
-	print_numbers( (void*) 1 );
+	while ( number < MAX_NUMBER ) {
+		safe_mutex_lock( &third_mutex );
+		if ( third_number == number ) {
+			print_number( (void*) number );
+			++third_number;
+			number += 2;
+		}
+		safe_mutex_unlock( &third_mutex );
+	}
 
 	return NULL;
 }
 
 /**
- * Split thread as parallels but second thread should wait of first thread ending.
+ * Split thread as parallels but each thread should wait of other thread ending.
  */
 void split_parallel_with_waiting()
 {
 	pthread_t child1, child2;
 
+	/* Initialize a mutex */
+	pthread_mutex_init( &third_mutex, NULL );
+
 	/* Create first thread */
-	safe_fork( &child1, &print_numbers, (void *)0 );
+	safe_fork( &child1, &_parallel_with_waiting_child, (void *) 0 );
 
 	/* Create second thread */
-	safe_fork( &child2, &_parallel_with_waiting_second_child, (void *)&child1 );
+	safe_fork( &child2, &_parallel_with_waiting_child, (void *) 1 );
 
+	pthread_join( child1, NULL );
 	pthread_join( child2, NULL );
 }
 

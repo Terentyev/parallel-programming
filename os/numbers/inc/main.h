@@ -9,6 +9,8 @@
 #define MAX_NUMBER 100
 
 #define safe_fork( thread, start_routine, arg ) safe_fork_impl( thread, start_routine, arg, __FILE__, __LINE__ )
+#define safe_mutex_lock( mutex ) safe_mutex_lock_impl( mutex, __FILE__, __LINE__ )
+#define safe_mutex_unlock( mutex ) safe_mutex_unlock_impl( mutex, __FILE__, __LINE__ )
 
 typedef enum SPLIT_TYPE
 {
